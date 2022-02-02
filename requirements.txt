@@ -1,0 +1,9 @@
+adafruit-io==2.6.0
+certifi==2021.10.8
+charset-normalizer==2.0.11
+idna==3.3
+paho-mqtt==1.6.1
+pyFirmata==1.1.0
+pyserial==3.5
+requests==2.27.1
+urllib3==1.26.8
