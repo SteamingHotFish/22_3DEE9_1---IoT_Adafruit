@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<h1>
+GEY
+</h1>
+
+</head>
+
+<body>
+
+<p id="gey">
+Led is OFF
+</p>
+
+<button type="button" onclick="geyFunction()">Turn on LED</button>
+
+<a href="{{ url_for('index')}}">
+big
+</a>
+
+<script>
+
+function geyFunction() {
+
+	console.log("button pressed");
+	
+	const ledData = '{"led":false}'
+	const obj = geyData.parse(ledData);
+
+	if (obj.led == false){
+		const myJSON = geyData.stringify({"led":true});
+		document.getElementById("gey").innerHTML = "Led is ON";
+		console.log("1");
+	}
+	else if (obj.led == true){
+		const myJSON = geyData.stringify({"led":false});
+		document.getElementById("gey").innerHTML = "Led is OFF";
+		console.log("2");
+	}
+}
+
+</script>
+
+
+
+</body>

@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Flask-SocketIO Test</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+        <script type="text/javascript" charset="utf-8">
+            $(document).ready(function() {
+                // Connect to the Socket.IO server.
+                // The connection URL has the following format, relative to the current page:
+                //     http[s]://<domain>:<port>[/<namespace>]
+                var socket = io();
+		
+                // Event handler for new connections.
+                // The callback function is invoked when a connection with the
+                // server is established.
+                socket.on('connect', function() {
+                    socket.emit('my_event', {data: 'I\'m connected!'});
+                });
+		
+		
+                socket.on('my_response', function(msg) {
+                    $('#arduino_A0').text(msg.A0);
+                    $('#arduino_A1').text(msg.A1);
+                    $('#arduino_A2').text(msg.A2);
+                    $('#arduino_A3').text(msg.A3);
+                    $('#arduino_A4').text(msg.A4);
+                    $('#arduino_A5').text(msg.A5);
+                    $('#com_selected').text(msg.COM);
+                });
+
+                $('form#emit').submit(function(event) {
+                    socket.emit('COM', {data: $('#com_data').val()});
+                    return false;
+                });
+
+                // Interval function that tests message latency by sending a "ping"
+                // message. The server then responds with a "pong" message and the
+                // round trip time is measured.
+                var ping_pong_times = [];
+                var start_time;
+                window.setInterval(function() {
+                    start_time = (new Date).getTime();
+                    $('#transport').text(socket.io.engine.transport.name);
+                    socket.emit('my_ping');
+                }, 1000);
+
+                // Handler for the "pong" message. When the pong is received, the
+                // time from the ping is stored, and the average of the last 30
+                // samples is average and displayed.
+                socket.on('my_pong', function() {
+                    var latency = (new Date).getTime() - start_time;
+                    ping_pong_times.push(latency);
+                    ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+                    var sum = 0;
+                    for (var i = 0; i < ping_pong_times.length; i++)
+                        sum += ping_pong_times[i];
+                    $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+                });
+
+                $('#arduino_start').click(function() {
+                    socket.emit('arduino', {data: event.target.id});
+                    return false;
+                });
+                $('#arduino_stop').click(function() {
+                    socket.emit('arduino', {data: event.target.id});
+                    return false;
+                });
+
+                window.setInterval(function() {
+                    <!-- start_time = (new Date).getTime(); -->
+                    <!--test_info-->
+                    socket.emit('arduino_test');
+                }, 1000);
+
+
+                // TEST TO TEXT
+                socket.on('ARDUINO_DATA', function() {
+                    console.log($('#arduino_info').text(socket.io.engine.ARDUINO_DATA.data));
+                    $('#arduino_info').text(socket.io.engine.data);
+                });
+
+                // Handlers for the different forms in the page.
+                // These accept data from the user and send it to the server in a
+                // variety of ways
+                $('form#emit').submit(function(event) {
+                    socket.emit('my_event', {data: $('#emit_data').val()});
+                    return false;
+                });
+
+            });
+        </script>
+    </head>
+    <body>
+
+        <h1>ARDUINO - Logger</h1>
+
+        <form id="emit" method="POST" action='#'>
+            <input type="text" name="com_data" id="com_data" placeholder="COM Port">
+            <input type="submit" value="Set COM">
+        </form>
+
+        <p>
+            Selected COM: <b><span id="com_selected"></span></b><br>
+        </p>
+
+        <p>
+            Average ping/pong latency: <b><span id="ping-pong"></span>ms</b><br>
+        </p>
+
+        <p>
+            Analog: <br>
+            A0: <b><span id="arduino_A0"></span></b><br>
+            A1: <b><span id="arduino_A1"></span></b><br>
+            A2: <b><span id="arduino_A2"></span></b><br>
+            A3: <b><span id="arduino_A3"></span></b><br>
+            A4: <b><span id="arduino_A4"></span></b><br>
+            A5: <b><span id="arduino_A5"></span></b><br>
+        </p>
+
+        <button class="btn btn-primary" id="arduino_start">Start</button>
+        <button class="btn btn-primary" id="arduino_stop">Stop</button>
+    </body>
+</html>
